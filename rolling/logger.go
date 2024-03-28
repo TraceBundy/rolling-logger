@@ -38,15 +38,14 @@ var once sync.Once
 /*
 Create new logger only at the first time.
 */
-func New() *zap.Logger {
+func New(config *zap.Config) *zap.Logger {
 	once.Do(func() {
-		logger = initLogger()
+		logger = initLogger(config)
 	})
 	return logger
 }
-
-func initLogger() *zap.Logger {
-	config := zap.Config{
+func defaultConfig() *zap.Config {
+	config := &zap.Config{
 		Encoding: "json",
 		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey:  "msg",
@@ -62,6 +61,13 @@ func initLogger() *zap.Logger {
 				enc.AppendInt64(int64(d) / 1000000)
 			},
 		},
+	}
+	return config
+}
+func initLogger(cfg *zap.Config) *zap.Logger {
+	config := defaultConfig()
+	if cfg != nil {
+		config = cfg
 	}
 	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= zapcore.InfoLevel
