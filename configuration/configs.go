@@ -3,6 +3,7 @@ package configuration
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"sync"
 
 	"gopkg.in/yaml.v2"
@@ -37,7 +38,35 @@ func GetConfigs() *Cfg {
 }
 
 func newConfigs() (*Cfg, error) {
-	return readConf(CONFIG_FILENAME)
+	cfg := readConfEnv()
+	if cfg != nil {
+		return cfg, nil
+	}
+	filename := os.Getenv("LOG_CONFIG_NAME")
+	if len(filename) == 0 {
+		filename = CONFIG_FILENAME
+	}
+	return readConf(filename)
+}
+
+func readConfEnv() *Cfg {
+	rotationTime := os.Getenv("LOG_ROTATION_TIME")
+	logInfoDir := os.Getenv("LOG_INFO_DIR")
+	logInfoFileName := os.Getenv("LOG_INFO_NAME")
+	logDebugDir := os.Getenv("LOG_DEBUG_DIR")
+	logDebugFileName := os.Getenv("LOG_DEBUG_NAME")
+	if len(rotationTime) == 0 || len(logInfoDir) == 0 || len(logInfoFileName) == 0 || len(logDebugDir) == 0 || len(logDebugFileName) == 0 {
+		return nil
+	}
+	return &Cfg{
+		LogConfig{
+			rotationTime,
+			logInfoDir,
+			logInfoFileName,
+			logDebugDir,
+			logDebugFileName,
+		},
+	}
 }
 
 func readConf(filename string) (*Cfg, error) {
